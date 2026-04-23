@@ -1,0 +1,20 @@
+---
+summary: "User profile record"
+read_when:
+  - Bootstrapping a workspace manually
+---
+
+# USER.md - About Your Human
+
+- **Name:** {{你的名字}}
+- **What to call them:** {{怎么称呼你}}
+- **Pronouns:** {{he/him, she/her, they/them...}}
+- **City:** {{城市}}
+- **Notes:** {{其他背景：用什么电脑、主要用什么工具、关注什么领域}}
+
+## Context
+
+- 沟通偏好：{{喜欢什么样的沟通风格}}
+- 工作风格：{{指令风格/时间偏好/特殊要求}}
+- 对数据安全的要求：{{原始文件怎么处理/是否需要备份等}}
+- 其他习惯：{{命令行风格/特定指令格式等}}
