@@ -11,8 +11,9 @@
 3. [身份配置](#身份配置) — 填模板，建个性
 4. [记忆系统初始化](#记忆系统初始化) — 建目录结构
 5. [自动化配置](#自动化配置) — 自动整理，不用手动
-6. [使用规则](#使用规则) — 怎么写记忆
-7. [进阶：Self-Improving](#进阶-self-improving) — 让 AI 越用越聪明
+6. [向量记忆库](#向量记忆库) — 语义搜索，让 AI 越用越聪明
+7. [使用规则](#使用规则) — 怎么写记忆
+8. [进阶：Self-Improving](#进阶-self-improving) — 让 AI 越用越聪明
 
 ---
 
@@ -261,6 +262,89 @@ touch ~/.workbuddy/memory/MEMORY.md
 1. 在 WorkBuddy 创建自动化任务
 2. 触发条件：每天晚上 10:00
 3. 任务：调用 Auto-Updater Skill
+
+### 自动化 4：每日记忆蒸馏（Dream）
+
+**作用**：每天凌晨自动把旧每日日志蒸馏成主题记忆，保持记忆系统精简。
+
+**配置方法**：
+
+1. 在 WorkBuddy 创建自动化任务
+2. 触发条件：每天凌晨 2:00
+3. 任务内容：
+   - 扫描 `~/.workbuddy/memory/` 下超过 7 天的每日日志
+   - 蒸馏精华到对应主题文件
+   - 删除已被吸收的原日志
+   - 更新 MEMORY.md 索引
+
+**与 extractMemories 的分工**：Dream 负责"减肥"（老日志），extractMemories 负责"吸收"（新日志）。
+
+### 自动化 5：向量记忆库同步（vector-memory-sync）
+
+**作用**：定期把记忆文件同步到向量数据库，支持语义搜索。
+
+**配置方法**：
+
+1. 在 WorkBuddy 创建自动化任务
+2. 触发条件：每 6 小时
+3. 任务内容：`python3 vecmem.py sync`
+
+详细说明见 [向量记忆库](#向量记忆库) 章节。
+
+---
+
+## 向量记忆库
+
+当记忆文件积累到 50+ 个时，向量语义搜索是唯一的检索出路。文件记忆是精确查找，向量搜索是语义匹配。
+
+### 组件
+
+| 组件 | 路径 | 说明 |
+|------|------|------|
+| 主脚本 | `~/.workbuddy/vector-memory/vecmem.py` | index / sync / search / status |
+| 配置 | `~/.workbuddy/vector-memory/config.json` | embedding API 参数 |
+| ChromaDB | `~/.workbuddy/vector-memory/chroma_data/` | 持久化向量存储 |
+
+### 初始化
+
+```bash
+# 1. 创建目录
+mkdir -p ~/.workbuddy/vector-memory/chroma_data
+
+# 2. 复制配置模板
+cp VECTOR_MEMORY/config.json.template ~/.workbuddy/vector-memory/config.json
+# 编辑填入你的 API key
+
+# 3. 全量索引
+python3 vecmem.py index --full
+```
+
+### 命令
+
+```bash
+cd ~/.workbuddy/vector-memory
+
+# 增量同步（自动化任务每 6 小时执行）
+python3 vecmem.py sync
+
+# 全量重建（记忆结构大变时）
+python3 vecmem.py index --full
+
+# 语义搜索
+python3 vecmem.py search "之前那个项目"
+
+# 状态查看
+python3 vecmem.py status
+```
+
+### 向量搜索 vs 文件查找
+
+| 场景 | 用哪种 |
+|------|--------|
+| "我上次做的那个项目叫什么来着" | 向量搜索 |
+| "Xavier 在哪个城市" | 直接读 USER.md |
+| 关于 XX 项目 AI 记得什么 | 向量搜索 |
+| 精确知道文件名 | 文件查找 |
 
 ---
 
