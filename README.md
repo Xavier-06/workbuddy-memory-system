@@ -20,12 +20,14 @@
 
 ## 快速开始
 
-### 第一步：Clone 仓库
+### 第一步：Clone 仓库（放到任意目录）
 
 ```bash
-git clone <仓库地址> ~/.workbuddy-memory-system
-cd ~/.workbuddy-memory-system
+git clone https://github.com/Xavier-06/workbuddy-memory-system.git ~/workbuddy-memory-system
+cd ~/workbuddy-memory-system
 ```
+
+> **重要说明**：clone 到哪里都行，这个 repo 只是"教材"。真正要用的是第三步初始化后复制到 `~/.workbuddy/` 和 `~/self-improving/` 里的文件。初始化完成后，clone 的这个目录可以留着（以后同步更新用），也可以删掉。
 
 ### 第二步：运行初始化脚本
 
@@ -33,18 +35,26 @@ cd ~/.workbuddy-memory-system
 bash SCRIPTS/init-memory-system.sh
 ```
 
-脚本会：
-- 在 `~/.workbuddy/` 下创建 `memory/` 和 `self-improving/` 目录
-- 复制模板文件
-- 创建示例骨架
+脚本会把模板文件复制到正确位置：
+
+| 源（repo 内） | 目标（你的电脑） |
+|-------------|--------------|
+| TEMPLATES/memory/*.md | `~/.workbuddy/memory/` |
+| TEMPLATES/SOUL.md.template | `~/.workbuddy/SOUL.md` |
+| TEMPLATES/IDENTITY.md.template | `~/.workbuddy/IDENTITY.md` |
+| TEMPLATES/USER.md.template | `~/.workbuddy/USER.md` |
+| self-improving/*.md | `~/self-improving/` |
+
+**注意**：`~/.workbuddy/` 和 `~/self-improving/` 才是你真正的记忆系统目录，不是 clone 的那个仓库。
 
 ### 第三步：填身份模板
 
+init-script 已把模板复制到正确位置，直接编辑：
+
 ```bash
-# 编辑这三个文件，按你自己的情况填
-vim ~/.workbuddy/IDENTITY.md.template  # 填完重命名为 IDENTITY.md
-vim ~/.workbuddy/USER.md.template      # 填完重命名为 USER.md
-vim ~/.workbuddy/SOUL.md.template       # 填完重命名为 SOUL.md
+vim ~/.workbuddy/SOUL.md
+vim ~/.workbuddy/IDENTITY.md
+vim ~/.workbuddy/USER.md
 ```
 
 ### 第四步：配置自动化任务
