@@ -222,7 +222,7 @@ done
 
 | 天 | 做什么 |
 |----|--------|
-| Day 1 | 初始化记忆系统（init-memory-system.sh），填身份模板 |
+| Day 1 | 初始化记忆系统（python3 SCRIPTS/init-memory-system.py），填身份模板 |
 | Day 2 | 配置所有自动化任务 |
 | Day 3 | 手动写 3 条记忆（用户偏好、项目决策、Self-Improving） |
 | Day 4 | 运行 extractMemories，检查主题文件是否更新 |

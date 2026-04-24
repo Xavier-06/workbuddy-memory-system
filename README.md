@@ -32,8 +32,11 @@ cd ~/workbuddy-memory-system
 ### 第二步：运行初始化脚本
 
 ```bash
-bash SCRIPTS/init-memory-system.sh
+# Python 脚本，Windows / macOS / Linux 通用
+python3 SCRIPTS/init-memory-system.py
 ```
+
+> **要求**：Python 3.6+。Windows 原生需要安装 Python（[python.org/downloads](https://python.org/downloads)）；macOS/Linux 通常自带。
 
 脚本会把模板文件复制到正确位置：
 
@@ -206,8 +209,8 @@ _我不是聊天机器人。我是一个有主见的家伙。_
 # 对于每个 WorkBuddy 项目 workspace
 ln -sf ~/.workbuddy/memory {workspace}/.workbuddy/memory
 
-# 或使用脚本
-bash SCRIPTS/ensure-memory-symlink.sh {workspace_path}
+# 或使用脚本（Windows / macOS / Linux 通用）
+python3 SCRIPTS/ensure-memory-symlink.py {workspace_path}
 ```
 
 ### 手动创建方法
