@@ -13,7 +13,7 @@
 
 ## 反馈
 
-- [状态面板偏好](status_panel_preference.md) — 用户对输出格式的偏好
+- [操作铁规则](feedback_operational_rules.md) — 跨项目操作经验：改代码杀旧进程等
 
 ## 参考
 
@@ -31,50 +31,81 @@
 
 | # | 系统 | 路径 | 记什么 | 不记什么 |
 |---|------|------|--------|----------|
-| 1 | 身份层 | SOUL.md / IDENTITY.md / USER.md | AI 风格、名字、用户画像 | — |
-| 2 | 全局主题记忆 | ~/.workbuddy/memory/*.md | 跨项目稳定知识 | 临时进展、空跑日志 |
-| 3 | 项目工作记忆 | {workspace}/.workbuddy/memory/ → symlink | 单项目进展流水 | 跨项目内容 |
-| 4 | Self-Improving | ~/self-improving/ | 犯错纠正、HOT 规则 | — |
-| 5 | 向量索引 | ~/.workbuddy/vector-memory/ | embedding 副本，纯检索层 | 独立内容 |
-| 6 | 会话摘要 | session-summary.md | 接续会话最少信息 | 已有的细节 |
+| 1 | **身份层** | SOUL.md / IDENTITY.md / USER.md | AI 风格、名字、用户画像、偏好 | — |
+| 2 | **全局主题记忆** | ~/.workbuddy/memory/*.md | 跨项目稳定知识：偏好、反馈规则、项目决策、参考指针 | 临时进展、调试过程、空跑日志 |
+| 3 | **项目工作记忆** | {workspace}/.workbuddy/memory/ → symlink → ~/.workbuddy/memory/ | 同系统 2（symlink 后是同一份文件） | — |
+| 4 | **Self-Improving** | ~/self-improving/ | 犯错纠正（唯一源）、HOT 规则、领域/项目经验 | 不重复 feedback_corrections |
+| 5 | **向量索引** | ~/.workbuddy/vector-memory/ | 系统 2 的 embedding 副本，纯检索层 | 不存独立内容 |
+| 6 | **会话摘要** | session-summary.md | 接续上次会话需要的最少信息 | 不重复 project 文件已有的细节 |
+
+**核心原则：**
+- **每个事实只存一处，其他地方只放指针**
+- **所有写入走全局路径 `~/.workbuddy/memory/`**——不写 workspace 相对路径
+- symlink 存在时写 `{workspace}/.workbuddy/memory/` 等同写全局；symlink 不存在时先修 symlink，**绝不**往孤立目录写
 
 ### 四种记忆类型
 
 | 类型 | 用途 | 何时保存 |
 |------|------|---------|
-| user | 用户角色、目标、偏好 | 了解到用户的任何细节时 |
-| feedback | 用户纠正——该做什么、避免什么 | 用户纠正你时 |
-| project | 项目上下文——决策、约束、事件 | 了解到项目进展时 |
-| reference | 外部系统指针 | 了解到外部系统时 |
+| `user` | 用户角色、目标、偏好、知识水平 | 了解到用户的任何细节时 |
+| `feedback` | 用户纠正和确认——该做什么、避免什么 | 用户纠正你（"不要这样"）或确认非显而易见的做法有效时 |
+| `project` | 项目上下文——决策、约束、截止日期、事件 | 了解到谁在做什么、为什么、什么时候 |
+| `reference` | 外部系统指针——看板、监控、频道 | 了解到外部系统的位置和用途时 |
 
 ### Frontmatter 格式
+
+每个记忆写成独立文件，使用以下格式：
 
 ```markdown
 ---
 name: {{记忆名称}}
-description: {{一行描述——用于判断相关性}}
+description: {{一行描述——用于判断未来对话的相关性，要具体}}
 type: {{user, feedback, project, reference}}
 ---
 
-{{记忆内容}}
-
-**Why:** 为什么要记这个
-**How to apply:** 未来遇到什么情况该调用这条记忆
+{{记忆内容 — feedback/project 类型，结构为：规则/事实，然后 **Why:** 和 **How to apply:** 行}}
 ```
 
 ### 不该存什么
 
-- 代码模式（可以从代码推导）
-- Git 历史
-- 调试方案（修复已在代码中）
-- 已在项目配置中记录的内容
+- 代码模式、架构、文件结构 — 可以从代码推导
+- Git 历史 — 用 git log
+- 调试方案 — 修复已在代码中
+- 已在 CLAUDE.md / 项目配置中记录的内容
 - 临时任务细节、当前对话上下文
+- extractMemories 空跑记录
 
 ### 保存规则
 
-1. 写主题文件 → 在本索引添加一行指针
+1. 写主题文件（带 frontmatter）→ 在本索引添加一行指针
 2. 本索引 ≤ 200 行 / 25KB
 3. 按主题组织，不按时间
 4. 更新或删除过时/错误的记忆
 5. 不写重复记忆——先检查是否有可更新的现有记忆
 6. 相对日期转换为绝对日期（"周四" → "2026-04-09"）
+7. 纠正/反馈统一写 `~/self-improving/corrections.md`，不在全局 memory 重复建 feedback 文件
+8. **所有写入走全局路径** `~/.workbuddy/memory/`，不写 workspace 相对路径（symlink 保证等价）
+
+### 双轨记忆边界（update_memory 工具 vs 文件记忆）
+
+| 维度 | `update_memory` 工具 | 文件记忆 `~/.workbuddy/memory/` |
+|------|---------------------|-------------------------------|
+| **生命周期** | 短命——当前会话上下文级别 | 持久——跨会话稳定知识 |
+| **记什么** | ① 当前任务的临时约束（"这次用 v2 接口"）② 本次会话的工作习惯提醒 ③ **等待迁移的跨会话事实**——先快速记下来，下次会话迁入文件 | 用户画像、项目决策、技术约束、脚本路径、踩坑经验 |
+| **不记什么** | 已写入文件记忆的内容（**严格不重复**） | 临时调试信息、中间过程 |
+| **同步** | 不与文件记忆自动同步 | 独立维护，自动化任务定期整理 |
+| **注入方式** | `<memories>` 标签自动注入 | SOUL.md 仪式手动读取 |
+| **去重规则** | 写入前先检查文件记忆是否已有同条目；有 → 跳过 | 文件记忆是唯一真相源 |
+
+**规则**：
+1. **有跨会话价值 → 文件记忆**。只在当前会话有用的 → update_memory
+2. **不要两边写同样内容**。发现重复时，保留文件记忆版本，删除 update_memory 版本
+3. **update_memory 可以当"暂存区"**——发现重要事实但来不及写文件时，先 update_memory 记下，下次会话迁入文件后删除 update_memory 版本
+4. **已有文件记忆的主题**（如 self-improving/memory.md 的规则），绝对不要再用 update_memory 存一遍
+
+### 记忆召回注意事项
+
+- >1 天的记忆可能已过时——使用前验证当前状态
+- "记忆说 X 存在" ≠ "X 现在还存在"
+- 引用函数/文件/flag 时，先 grep 确认
+- 向量搜索（vecmem.py search）优先于 frontmatter 文本匹配

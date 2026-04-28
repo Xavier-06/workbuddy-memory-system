@@ -233,12 +233,12 @@ touch ~/.workbuddy/memory/MEMORY.md
 
 ### 自动化 1：定期记忆提取（memory-extract）
 
-**作用**：每天扫描每日日志，把有价值的内容蒸馏到主题记忆文件。
+**作用**：每 6 小时扫描每日日志，把有价值的内容蒸馏到主题记忆文件。
 
 **配置方法**：
 
 1. 在 WorkBuddy 创建自动化任务
-2. 触发条件：每天固定时间（如早上 9:00）
+2. 触发条件：每 6 小时
 3. 任务内容：调用 `extractMemories` 脚本，扫描 `~/.workbuddy/memory/` 下的每日日志
 
 **extractMemories 职责**：
@@ -256,12 +256,12 @@ touch ~/.workbuddy/memory/MEMORY.md
 
 ### 自动化 2：会话摘要（session-summary）
 
-**作用**：每次会话结束后更新 session-summary.md，确保下次接上。
+**作用**：每 8 小时更新 session-summary.md，确保下次接上。
 
 **配置方法**：
 
 1. 在 WorkBuddy 创建自动化任务
-2. 触发条件：每次会话结束（AI 检测到对话告一段落）
+2. 触发条件：每 8 小时
 3. 任务内容：
    - 读取 MEMORY.md 和 session-summary.md
    - 验证所有主题文件存在性（无悬空指针）
@@ -359,6 +359,25 @@ python3 vecmem.py status
 | "Xavier 在哪个城市" | 直接读 USER.md |
 | 关于 XX 项目 AI 记得什么 | 向量搜索 |
 | 精确知道文件名 | 文件查找 |
+
+---
+
+## 双轨记忆边界
+
+WorkBuddy 提供了 `update_memory` 工具（短命记忆），同时我们用 Markdown 文件做持久记忆。**两条通道没有自动同步，必须严格分工，否则必生重复和矛盾。**
+
+| 维度 | `update_memory` 工具 | 文件记忆 `~/.workbuddy/memory/` |
+|------|---------------------|-------------------------------|
+| 生命周期 | 当前会话 | 跨会话 |
+| 记什么 | 临时约束、暂存区 | 用户画像、项目决策、踩坑经验 |
+| 不记什么 | 已写入文件记忆的内容 | 临时调试信息 |
+
+**4 条规则**：
+
+1. **有跨会话价值 → 文件记忆**。只在当前会话有用的 → update_memory
+2. **不要两边写同样内容**。发现重复时，保留文件记忆版本，删除 update_memory 版本
+3. **update_memory 可当暂存区**——来不及写文件时先 update_memory，下次迁入文件后删除
+4. **已有文件记忆的主题**，绝对不再用 update_memory 存一遍
 
 ---
 
@@ -461,4 +480,5 @@ type: {{user, feedback, project, reference}}
 
 ## 更新日志
 
+- 2026-04-28：加入双轨记忆边界、修正自动化频率（extract 2h→6h, session 4h→8h）
 - 2026-04-23：初版创建

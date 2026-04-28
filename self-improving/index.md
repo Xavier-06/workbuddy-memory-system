@@ -1,34 +1,17 @@
-# Self-Improving 索引
+# Self-Improving Index
 
-> ~/self-improving/ 目录的索引文件。
+> Self-Improving 系统索引，记录目录结构和文件职责。
 
-## 目录结构
+## 文件清单
 
-```
-~/self-improving/
-├── corrections.md    — 用户纠正记录
-├── memory.md         — HOT 规则（高价值经验）
-├── index.md          — 本文件
-├── domains/          — 领域经验（按领域分）
-├── projects/         — 项目经验（按项目分）
-└── archive/          — 归档旧经验
-```
+| 文件 | 职责 | 读写频率 |
+|------|------|---------|
+| memory.md | HOT 规则 + 偏好 + 模式（每次任务前读） | 高频读写 |
+| corrections.md | 犯错纠正日志 | 犯错时写入 |
+| index.md | 本文件，系统索引 | 低频更新 |
 
-## HOT Rules
+## 与全局记忆的关系
 
-HOT = High-value, Ongoing, Tested。每条都经过实战验证。
-
-## 使用方法
-
-非平凡任务前，读取 corrections.md 和 memory.md。
-被纠正或发现可复用经验时，立即写入对应文件。
-
----
-
-## HOT: {{规则名}}
-
-**场景：** {{适用场景}}
-
-**规则：** {{具体做法}}
-
-**Why：** {{为什么有效}}
+- **Self-Improving 是纠正/教训的唯一源**——被纠正时写这里，不在全局 memory 重复建 feedback 文件
+- **全局 memory 是跨会话稳定知识源**——Self-Improving 的规则成熟后可以迁入全局 memory 的主题文件
+- **update_memory 不要重复存 Self-Improving 已有的内容**

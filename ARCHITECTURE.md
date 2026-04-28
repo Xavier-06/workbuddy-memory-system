@@ -15,29 +15,61 @@
 |---|------|------|--------|----------|
 | 1 | **身份层** | SOUL.md / IDENTITY.md / USER.md | AI 风格、名字、用户画像、偏好 | — |
 | 2 | **全局主题记忆** | ~/.workbuddy/memory/*.md | 跨项目稳定知识：偏好、反馈规则、项目决策、参考指针 | 临时进展、调试过程、空跑日志 |
-| 3 | **项目工作记忆** | {workspace}/.workbuddy/memory/ → symlink → ~/.workbuddy/memory/ | 单项目进展流水、当日工作日志 | 跨项目的东西 |
+| 3 | **项目工作记忆** | {workspace}/.workbuddy/memory/ → symlink → ~/.workbuddy/memory/ | 同系统 2（symlink 后是同一份文件） | — |
 | 4 | **Self-Improving** | ~/self-improving/ | 犯错纠正（唯一源）、HOT 规则、领域/项目经验 | 不重复 feedback_corrections |
-| 5 | **向量索引** | ~/.workbuddy/vector-memory/ | System 1 的 embedding 副本，纯检索层 | 不存独立内容 |
+| 5 | **向量索引** | ~/.workbuddy/vector-memory/ | 系统 2 的 embedding 副本，纯检索层 | 不存独立内容 |
 | 6 | **会话摘要** | session-summary.md | 接续上次会话需要的最少信息 | 不重复 project 文件已有的细节 |
 
-**每个事实只存一处，其他地方只放指针。**
+**核心原则：**
+- **每个事实只存一处，其他地方只放指针**
+- **所有写入走全局路径 `~/.workbuddy/memory/`**——不写 workspace 相对路径
+- symlink 存在时写 `{workspace}/.workbuddy/memory/` 等同写全局；symlink 不存在时先修 symlink，**绝不**往孤立目录写
+
+## 双轨记忆边界（update_memory 工具 vs 文件记忆）
+
+WorkBuddy 平台提供了 `update_memory` 工具（短命记忆），同时我们用 Markdown 文件做持久记忆。两者必须明确分工，否则必生重复和矛盾。
+
+| 维度 | `update_memory` 工具 | 文件记忆 `~/.workbuddy/memory/` |
+|------|---------------------|-------------------------------|
+| **生命周期** | 短命——当前会话上下文级别 | 持久——跨会话稳定知识 |
+| **记什么** | ① 当前任务的临时约束（"这次用 v2 接口"）② 本次会话的工作习惯提醒 ③ **等待迁移的跨会话事实**——先快速记下来，下次会话迁入文件 | 用户画像、项目决策、技术约束、脚本路径、踩坑经验 |
+| **不记什么** | 已写入文件记忆的内容（**严格不重复**） | 临时调试信息、中间过程 |
+| **同步** | 不与文件记忆自动同步 | 独立维护，自动化任务定期整理 |
+| **注入方式** | `<memories>` 标签自动注入 | SOUL.md 仪式手动读取 |
+| **去重规则** | 写入前先检查文件记忆是否已有同条目；有 → 跳过 | 文件记忆是唯一真相源 |
+
+**规则**：
+1. **有跨会话价值 → 文件记忆**。只在当前会话有用的 → update_memory
+2. **不要两边写同样内容**。发现重复时，保留文件记忆版本，删除 update_memory 版本
+3. **update_memory 可以当"暂存区"**——发现重要事实但来不及写文件时，先 update_memory 记下，下次会话迁入文件后删除 update_memory 版本
+4. **已有文件记忆的主题**（如 self-improving/memory.md 的规则），绝对不要再用 update_memory 存一遍
 
 ## SessionStart 仪式流程
 
 每次新会话第一条消息前，AI 自动执行：
 
-1. 读取 SOUL.md / IDENTITY.md / USER.md
-2. 读取 MEMORY.md（索引）
-3. 扫描 memory/ 下所有主题文件
-4. 根据上下文判断相关记忆（最多 5 条）
-5. 读取相关记忆文件完整内容，注入上下文
-6. 对 >1 天的记忆，使用前验证当前状态
+1. **确保 symlink**：执行 `ensure-memory-symlink.py`，保证 `{workspace}/.workbuddy/memory/` → `~/.workbuddy/memory/`
+2. 读取 SOUL.md / IDENTITY.md / USER.md
+3. 读取 MEMORY.md（索引）
+4. 扫描 memory/ 下所有主题文件的 frontmatter description
+5. 根据上下文判断相关记忆（最多 5 条）
+6. 读取相关记忆文件完整内容，注入上下文
+7. 对 >1 天的记忆，使用前验证当前状态
 
 ## 每日日志 → 主题记忆蒸馏流程
 
-每日日志 (YYYY-MM-DD.md) → extractMemories 自动化任务扫描 → 判断是否有新知识/决策/偏好/规则 → YES 则写入/更新对应主题文件 + 更新 MEMORY.md 索引；NO 则静默退出。日志 > 30 天则蒸馏到 MEMORY.md 后删除原日志。
+每日日志 (YYYY-MM-DD.md) → extractMemories 自动化任务（每 6 小时）扫描 → 判断是否有新知识/决策/偏好/规则 → YES 则写入/更新对应主题文件 + 更新 MEMORY.md 索引；NO 则静默退出。日志 > 30 天则蒸馏到主题文件后删除原日志。
 
 **静默退出原则**：extractMemories 无实质内容时静默退出，不写空记录，不刷存在感。
+
+## 自动化任务调度
+
+| 自动化 | 频率 | 作用 |
+|--------|------|------|
+| memory-extract-periodic | 每 6 小时 | 从每日日志提取新知识到主题文件 |
+| memory-session-summary | 每 8 小时 | 更新会话摘要 |
+| memory-dream-daily-consolidation | 每周日凌晨 3:00 | 蒸馏旧日志（>30天）+ 索引整理 |
+| vector-memory-sync | 每 6 小时 | 向量记忆增量同步 |
 
 ## symlink 机制
 
@@ -52,7 +84,9 @@
 - **为什么不用数据库？** Markdown 是 AI 原生格式，直接可读可写，不需要解析。
 - **为什么每个事实只存一处？** 多副本 = 多处需要同步 = 迟早有一处不一致 = 信任崩塌。
 - **为什么每日日志要定期删除？** 保留日志等于保留草稿，30 天以上的草稿应该蒸馏成成品后销毁。
+- **为什么 update_memory 和文件记忆必须分工？** 两条记忆通道没有自动同步，同一事实两边都写必生矛盾。文件记忆是唯一真相源，update_memory 只当暂存区。
 
 ## 更新日志
 
+- 2026-04-28：加入双轨记忆边界、修正自动化频率、完善 SessionStart 流程
 - 2026-04-23：初版创建
