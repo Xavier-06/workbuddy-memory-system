@@ -25,7 +25,8 @@ find ~/.workbuddy -name "vecmem.py" 2>/dev/null
 
 ```
 VECTOR_MEMORY/
-├── config.json.template    ← API 配置模板
+├── vecmem.py              ← 主脚本（index / sync / search / status）
+├── config.json.template   ← API 配置模板
 └── README.md              ← 本文件
 ```
 
@@ -39,15 +40,18 @@ VECTOR_MEMORY/
 
 ## 如果可用：初始化步骤
 
-### 1. 获取 vecmem.py
-
-vecmem.py 是 WorkBuddy 内置脚本，应该已经在你的 WorkBuddy 安装目录下：
+### 1. 部署 vecmem.py
 
 ```bash
-find ~/.workbuddy -name "vecmem.py" 2>/dev/null
+# 从本仓库复制到 WorkBuddy 目录
+cp VECTOR_MEMORY/vecmem.py ~/.workbuddy/vector-memory/vecmem.py
 ```
 
-如果没有但 WorkBuddy 有向量记忆功能，说明它可能还没有安装到本地目录，参考 [Setup instructions from WorkBuddy docs](#)。
+如果 `~/.workbuddy/vector-memory/` 目录不存在，先创建：
+
+```bash
+mkdir -p ~/.workbuddy/vector-memory/chroma_data
+```
 
 ### 2. 配置 API
 
